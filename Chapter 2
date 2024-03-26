@@ -1,0 +1,225 @@
+EMBEDDING IN PYTORCH
+
+# Map a unique index to each word
+words = ["This", "book", "was", "fantastic", "I", "really", "love", "science", "fiction", "but", "the", "protagonist", "was", "rude", "sometimes"]
+word_to_idx = {word: i for i, word in enumerate(words)}
+
+# Convert word_to_idx to a tensor
+inputs = torch.tensor([word_to_idx[w] for w in words])
+
+# Initialize embedding layer with ten dimensions
+embedding = nn.Embedding(num_embeddings=len(words), embedding_dim=10)
+
+# Pass the tensor to the embedding layer
+output = embedding(inputs)
+print(output)
+
+DRAG AND DROP
+Binary - Loan default
+         Spam email
+Multi-class - Language detection
+              Handwritten number
+Mlti-label- Book genre
+            Product recommendation
+
+BUILD A CNN MODEL FOR TEXT
+
+class TextClassificationCNN(nn.Module):
+    def __init__(self, vocab_size, embed_dim):
+        super(TextClassificationCNN, self).__init__()
+        # Initialize the embedding layer 
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.conv = nn.Conv1d(embed_dim, embed_dim, kernel_size=3, stride=1, padding=1)
+        self.fc = nn.Linear(embed_dim, 2)
+    def forward(self, text):
+        embedded = self.embedding(text).permute(0, 2, 1)
+        # Pass the embedded text through the convolutional layer and apply a ReLU
+        conved = F.relu(self.conv(embedded))
+        conved = conved.mean(dim=2) 
+        return self.fc(conved)
+
+TRAIN A CNN MODEL FOR TEXT
+
+# Define the loss function
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.1)
+
+for epoch in range(10):
+    for sentence, label in data:     
+        # Clear the gradients
+        model.zero_grad()
+        sentence = torch.LongTensor([word_to_ix.get(w, 0) for w in sentence]).unsqueeze(0) 
+        label = torch.LongTensor([int(label)])
+        outputs = model(sentence)
+        loss = criterion(outputs, label)
+        loss.backward()
+        # Update the parameters
+        optimizer.step()
+print('Training complete!')
+
+
+TESTING THE SENTIMENT ANALYSIS CNN MODEL
+
+book_reviews = [
+    "I love this book".split(),
+    "I do not like this book".split()
+]
+for review in book_reviews:
+    # Convert the review words into tensor form
+    input_tensor = torch.tensor([word_to_ix[w] for w in review], dtype=torch.long).unsqueeze(0) 
+    # Get the model's output
+    outputs = model(input_tensor)
+    # Find the index of the most likely sentiment category
+    _, predicted_label = torch.max(outputs.data, 1)
+    # Convert the predicted label into a sentiment string
+    sentiment = "Positive" if predicted_label.item() == 1 else "Negative"
+    print(f"Book Review: {' '.join(review)}")
+    print(f"Sentiment: {sentiment}\n")
+
+BUILDING AN RNN MODEL FOR TEXT
+
+
+# Complete the RNN class
+class RNNModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+        super(RNNModel, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)        
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        out, _ = self.rnn(x, h0)
+        out = out[:, -1, :] 
+        out = self.fc(out)
+        return out
+
+# Initialize the model
+rnn_model = RNNModel(input_size, hidden_size, num_layers, num_classes)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(rnn_model.parameters(), lr=0.01)
+
+# Train the model for ten epochs and zero the gradients
+for epoch in range(10): 
+    optimizer.zero_grad()
+    outputs = rnn_model(X_train_seq)
+    loss = criterion(outputs, y_train_seq)
+    loss.backward()
+    optimizer.step()
+    print(f'Epoch: {epoch+1}, Loss: {loss.item()}')
+
+
+
+BUILDING AN LSTM MODEL FOR TEXT
+
+
+# Initialize the LSTM and the output layer with parameters
+class LSTMModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+        super(LSTMModel, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)        
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        out, _ = self.lstm(x, (h0, c0))
+        out = out[:, -1, :] 
+        out = self.fc(out)
+        return out
+
+# Initialize model with required parameters
+lstm_model = LSTMModel(input_size, hidden_size, num_layers, num_classes)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(lstm_model.parameters(), lr=0.01)
+
+# Train the model by passing the correct parameters and zeroing the gradient
+for epoch in range(10): 
+    optimizer.zero_grad()
+    outputs = lstm_model(X_train_seq)
+    loss = criterion(outputs, y_train_seq)
+    loss.backward()
+    optimizer.step()
+    print(f'Epoch: {epoch+1}, Loss: {loss.item()}')
+
+
+
+BUILDING A GRU MODEL FOR TEXT
+
+# Complete the GRU model
+class GRUModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+        super(GRUModel, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)       
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size) 
+        out, _ = self.gru(x, h0)
+        out = out[:, -1, :] 
+        out = self.fc(out)
+        return out
+
+# Initialize the model
+gru_model = GRUModel(input_size, hidden_size, num_layers, num_classes)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(gru_model.parameters(), lr=0.01)
+
+# Train the model and backpropagate the loss after initialization
+for epoch in range(15): 
+    optimizer.zero_grad()
+    outputs = gru_model(X_train_seq)
+    loss = criterion(outputs, y_train_seq)
+    loss.backward()
+    optimizer.step()
+    print(f'Epoch: {epoch+1}, Loss: {loss.item()}')
+
+
+EVALUATING RNN CLASSIFICATION MODELS
+
+# Create an instance of the metrics
+accuracy = Accuracy(task="multiclass", num_classes=3)
+precision = Precision(task="multiclass", num_classes=3)
+recall = Recall(task="multiclass", num_classes=3)
+f1 = F1Score(task="multiclass", num_classes=3)
+
+# Generate the predictions
+outputs = rnn_model(X_test_seq)
+_, predicted = torch.max(outputs, 1)
+
+# Calculate the metrics
+accuracy_score = accuracy(predicted, y_test_seq)
+precision_score = precision(predicted, y_test_seq)
+recall_score = recall(predicted, y_test_seq)
+f1_score = f1(predicted, y_test_seq)
+print("RNN Model - Accuracy: {}, Precision: {}, Recall: {}, F1 Score: {}".format(accuracy_score, precision_score, recall_score, f1_score))
+
+
+EVALUATING THE MODEL'S PERFORMANCE
+
+# Create an instance of the metrics
+accuracy = Accuracy(task="multiclass", num_classes=3)
+precision = Precision(task="multiclass", num_classes=3)
+recall = Recall(task="multiclass", num_classes=3)
+f1 = F1Score(task="multiclass", num_classes=3)
+
+# Calculate metrics for the LSTM model
+accuracy_1 = accuracy(y_pred_lstm, y_test)
+precision_1 = precision(y_pred_lstm, y_test)
+recall_1 = recall(y_pred_lstm, y_test)
+f1_1 = f1(y_pred_lstm, y_test)
+print("LSTM Model - Accuracy: {}, Precision: {}, Recall: {}, F1 Score: {}".format(accuracy_1, precision_1, recall_1, f1_1))
+
+# Calculate metrics for the GRU model
+accuracy_2 = accuracy(y_pred_gru, y_test)
+precision_2 = precision(y_pred_gru, y_test)
+recall_2 = recall(y_pred_gru, y_test)
+f1_2 = f1(y_pred_gru, y_test)
+print("GRU Model - Accuracy: {}, Precision: {}, Recall: {}, F1 Score: {}".format(accuracy_2, precision_2, recall_2, f1_2))
+
+
+
+COMPARING MODELS: 
+ANS: gru_model performed better in precision, recall, and F1 score
